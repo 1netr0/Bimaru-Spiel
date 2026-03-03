@@ -9,18 +9,25 @@ unbekannt = 0
 wasser = 1
 schiff = 2
 
+class Feld():
+    def __init__(self, status=unbekannt):
+        self.status = status
+
+
 reihen = 10
 spalten = 10
-board = [[unbekannt for _ in range(spalten)] for _ in range(reihen)]
+board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
 
 def draw_board(surface):
     for i in range(reihen):
         for j in range(spalten):
-            if board[i][j] == unbekannt:
+            status = board[i][j].status
+            
+            if status == unbekannt:
                 color = (200, 200, 200)
-            elif board[i][j] == wasser:
+            elif status == wasser:
                 color = (0, 0, 255)
-            elif board[i][j] == schiff:
+            elif status == schiff:
                 color = (255, 0, 0)
 
             pygame.draw.rect(DISPLAYSURF, color, (j*50, i*50, 50, 50), 0)
