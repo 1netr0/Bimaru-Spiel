@@ -41,12 +41,27 @@ def kann_platzieren(felder):
 
 def platzieren_schiff(x, y, laenge, horizontal):
     felder = []
-    for k in range (laenge):
+    for k in range(laenge):
         if horizontal:
-            felder.append((x, y+k))
+            felder.append((x, y + k))
         else:
-            felder.append((x+k, y))
-        
+            felder.append((x + k, y))
+
+    if not kann_platzieren(felder):
+        return None
+
+    neues_schiff = Schiff(laenge, felder)
+
+    for fx, fy in felder:
+        board[fx][fy].status = schiff
+        board[fx][fy].schiff = neues_schiff
+
+    return neues_schiff
+
+schiffe = []
+x = platzieren_schiff(2, 3, 4, True)
+if x:
+    schiffe.append(s)
 
 def draw_board(surface):
     for i in range(reihen):
