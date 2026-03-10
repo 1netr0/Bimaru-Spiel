@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((800, 600))
@@ -35,7 +36,7 @@ def kann_platzieren(felder):
     for x, y in felder:
         if not in_bound(x, y):
             return False
-        if board[x][y].status is not unbekannt:
+        if board[x][y].status != unbekannt:
             return False
     return True
 
@@ -58,10 +59,33 @@ def platzieren_schiff(x, y, laenge, horizontal):
 
     return neues_schiff
 
-schiffe = []
-x = platzieren_schiff(2, 3, 4, True)
-if x:
-    schiffe.append(s)
+def platziere_zufaellige_flotte():
+    schiffe = []
+    flotten_laengen = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+
+    for laenge in flotten_laengen:
+        platziert = False
+
+        while not platziert:
+            horizontal = random.choice([True, False])
+
+            if horizontal:
+                x = random.randint(0, reihen - 1)
+                y = random.randint(0, spalten - laenge)
+            else:
+                x = random.randint(0, reihen - laenge)
+                y = random.randint(0, spalten - 1)
+
+            neues_schiff = platzieren_schiff(x, y, laenge, horizontal)
+
+            if neues_schiff:
+                schiffe.append(neues_schiff)
+                platziert = True
+
+    return schiffe
+
+schiffe = platziere_zufaellige_flotte()
+
 
 def draw_board(surface):
     for i in range(reihen):
@@ -76,6 +100,7 @@ def draw_board(surface):
                 color = (255, 0, 0)
 
             pygame.draw.rect(DISPLAYSURF, color, (j*50, i*50, 50, 50), 0)
+            pygame.draw.rect(surface, (0, 0, 0), (j * 50, i * 50, 50, 50), 1)
 
 
 while True:
