@@ -12,6 +12,9 @@ schiff = 2
 treffer = 3
 feldgroesse = 50
 
+font = pygame.font.SysFont(None, 36)
+clicks = 0
+
 class Feld():
     def __init__(self, status=unbekannt):
         self.status = status
@@ -90,6 +93,7 @@ def platziere_zufaellige_flotte():
 schiffe = platziere_zufaellige_flotte()
 
 def abschiessen(x, y):
+    global clicks
     spalte = x // feldgroesse
     reihe = y // feldgroesse
 
@@ -100,7 +104,8 @@ def abschiessen(x, y):
 
     if feld.hit:
         return
-
+    
+    clicks = clicks + 1
     feld.hit = True
 
     if feld.status == schiff:
@@ -115,6 +120,7 @@ def restart():
     global board, schiffe
     board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
     schiffe = platziere_zufaellige_flotte()
+    clicks = 0
 
 
 def draw_board(surface):
@@ -134,6 +140,8 @@ def draw_board(surface):
             pygame.draw.rect(DISPLAYSURF, color, (j*50, i*50, 50, 50), 0)
             pygame.draw.rect(surface, (0, 0, 0), (j * 50, i * 50, 50, 50), 1)
 
+    text = font.render(f"clicks: {clicks}", True, (0, 0, 0))
+    DISPLAYSURF.blit(text, (610, 10))
 
 while True:
     for event in pygame.event.get():
