@@ -9,11 +9,14 @@ pygame.display.set_caption("Bimaru")
 unbekannt = 0
 wasser = 1
 schiff = 2
+treffer = 3
+feldgroesse = 50
 
 class Feld():
     def __init__(self, status=unbekannt):
         self.status = status
         self.schiff = None
+        self.hit = False
 
 class Schiff():
     def __init__(self, laenge, felder):
@@ -25,8 +28,8 @@ class Schiff():
         return len(self.treffer) == self.laenge
 
 
-reihen = 10
-spalten = 10
+reihen = 12
+spalten = 12
 board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
 
 def in_bound(x, y):
@@ -86,6 +89,29 @@ def platziere_zufaellige_flotte():
 
 schiffe = platziere_zufaellige_flotte()
 
+def abschiessen(x, y):
+    spalte = x // feldgroesse
+    reihe = y // feldgroesse
+
+    if not in_bound(reihe, spalte):
+        return
+
+    feld = board[reihe][spalte]
+
+    if feld.hit:
+        return
+
+    feld.hit = True
+
+    if feld.status == schiff:
+        feld.status = treffer
+        feld.schiff.treffer.add((reihe, spalte))
+    elif feld.status == treffer:
+        feld.status = treffer
+    else:
+        feld.status = wasser
+
+
 
 def draw_board(surface):
     for i in range(reihen):
@@ -98,6 +124,8 @@ def draw_board(surface):
                 color = (0, 0, 255)
             elif status == schiff:
                 color = (255, 0, 0)
+            elif status == treffer:
+                color = (0, 255, 0)
 
             pygame.draw.rect(DISPLAYSURF, color, (j*50, i*50, 50, 50), 0)
             pygame.draw.rect(surface, (0, 0, 0), (j * 50, i * 50, 50, 50), 1)
@@ -108,6 +136,10 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            x, y = pygame.mouse.get_pos()
+            abschiessen(x, y)
     
     DISPLAYSURF.fill((255, 255, 255))
     draw_board(DISPLAYSURF)
