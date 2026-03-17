@@ -12,6 +12,9 @@ schiff = 2
 treffer = 3
 feldgroesse = 50
 
+start = 0
+end = None
+
 font = pygame.font.SysFont(None, 36)
 clicks = 0
 
@@ -92,6 +95,29 @@ def platziere_zufaellige_flotte():
 
 schiffe = platziere_zufaellige_flotte()
 
+def start_timer():
+    global start
+    start = pygame.time.get_ticks()
+    end = None
+
+def stop_timer():
+    global end
+    if end == None:
+        end = pygame.time.get_ticks()
+
+def alles_versenkt():
+    for schiff in schiffe:
+        if not schiff.versenkt():
+            return False
+    return True
+
+def vergangene_zeit():
+    if end is None:
+        return (pygame.time.get_ticks() - start) / 1000
+    else:
+        return (end - start) / 1000
+    
+
 def abschiessen(x, y):
     global clicks
     spalte = x // feldgroesse
@@ -115,6 +141,9 @@ def abschiessen(x, y):
         feld.status = treffer
     else:
         feld.status = wasser
+
+    if alles_versenkt():
+        stop_timer()
 
 def restart():
     global board, schiffe
@@ -141,7 +170,11 @@ def draw_board(surface):
             pygame.draw.rect(surface, (0, 0, 0), (j * 50, i * 50, 50, 50), 1)
 
     text = font.render(f"clicks: {clicks}", True, (0, 0, 0))
+    zeit = font.render(f"zeit: {vergangene_zeit()} s", True, (0, 0, 0))
     DISPLAYSURF.blit(text, (610, 10))
+    DISPLAYSURF.blit(zeit, (610, 50))
+
+start_timer()
 
 while True:
     for event in pygame.event.get():
