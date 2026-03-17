@@ -111,6 +111,10 @@ def abschiessen(x, y):
     else:
         feld.status = wasser
 
+def restart():
+    global board, schiffe
+    board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
+    schiffe = platziere_zufaellige_flotte()
 
 
 def draw_board(surface):
@@ -140,6 +144,10 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = pygame.mouse.get_pos()
             abschiessen(x, y)
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                restart()
     
     DISPLAYSURF.fill((255, 255, 255))
     draw_board(DISPLAYSURF)
