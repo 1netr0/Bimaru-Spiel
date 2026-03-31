@@ -164,7 +164,13 @@ def restart():
     board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
     schiffe = platziere_zufaellige_flotte()
     clicks = 0
-    start_timer()   
+    start_timer()
+
+def schiffe_spalten(spalte):
+    return sum(1 for reihe in range(reihen) if board[reihe][spalte].status == schiff)
+
+def schiffe_reihen(reihe):
+    return sum(1 for spalte in range(spalten) if board[reihe][spalte].status == schiff)
 
 
 def draw_board(surface):
