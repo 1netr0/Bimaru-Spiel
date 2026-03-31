@@ -3,7 +3,7 @@ import sys
 import random
 
 pygame.init()
-DISPLAYSURF = pygame.display.set_mode((800, 600))
+DISPLAYSURF = pygame.display.set_mode((800, 700))
 pygame.display.set_caption("Bimaru")
 
 unbekannt = 0
@@ -134,8 +134,8 @@ def vergangene_zeit():
 
 def abschiessen(x, y):
     global clicks
-    spalte = x // feldgroesse
-    reihe = y // feldgroesse
+    spalte = (x - 40) // feldgroesse
+    reihe = (y - 40) // feldgroesse
 
     if not in_bound(reihe, spalte):
         return
@@ -187,13 +187,25 @@ def draw_board(surface):
             elif status == treffer:
                 color = (0, 255, 0)
 
-            pygame.draw.rect(DISPLAYSURF, color, (j*50, i*50, 50, 50), 0)
-            pygame.draw.rect(surface, (0, 0, 0), (j * 50, i * 50, 50, 50), 1)
+            pygame.draw.rect(DISPLAYSURF, color, (40 + j * feldgroesse, 40 + i*feldgroesse, feldgroesse, feldgroesse), 0)
+            pygame.draw.rect(surface, (0, 0, 0), (40 + j * feldgroesse, 40 + i * feldgroesse, feldgroesse, feldgroesse), 1)
 
     text = font.render(f"clicks: {clicks}", True, (0, 0, 0))
     zeit = font.render(f"zeit: {vergangene_zeit()} s", True, (0, 0, 0))
-    DISPLAYSURF.blit(text, (610, 10))
-    DISPLAYSURF.blit(zeit, (610, 50))
+    DISPLAYSURF.blit(text, (spalten * feldgroesse + 50, 10))
+    DISPLAYSURF.blit(zeit, (spalten * feldgroesse + 50, 50))
+
+    for j in range(spalten):
+        anzahl = schiffe_spalten(j)
+        text = font.render(str(anzahl), True, (0, 0, 0))
+        text_rect = text.get_rect(center=(40 + j * feldgroesse + feldgroesse / 2, 40 / 2))
+        DISPLAYSURF.blit(text, text_rect)
+
+    for i in range(reihen):
+        anzahl = schiffe_reihen(i)
+        text = font.render(str(anzahl), True, (0, 0, 0))
+        text_rect = text.get_rect(center=(40 / 2, 40 + i * feldgroesse + feldgroesse / 2))
+        DISPLAYSURF.blit(text, text_rect) 
 
 start_timer()
 
