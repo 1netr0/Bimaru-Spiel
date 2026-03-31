@@ -42,11 +42,24 @@ def in_bound(x, y):
     return 0 <= x < reihen and 0 <= y < spalten
 
 def kann_platzieren(felder):
+    felder_set = set(felder)
+
     for x, y in felder:
         if not in_bound(x, y):
             return False
         if board[x][y].status != unbekannt:
             return False
+
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = x + dx, y + dy
+                if (nx, ny) in felder_set:
+                    continue
+                if in_bound(nx, ny) and board[nx][ny].status == schiff:
+                    return False
+    
     return True
 
 def platzieren_schiff(x, y, laenge, horizontal):
@@ -96,7 +109,7 @@ def platziere_zufaellige_flotte():
 schiffe = platziere_zufaellige_flotte()
 
 def start_timer():
-    global start
+    global start, end
     start = pygame.time.get_ticks()
     end = None
 
@@ -104,6 +117,7 @@ def stop_timer():
     global end
     if end == None:
         end = pygame.time.get_ticks()
+    return end
 
 def alles_versenkt():
     for schiff in schiffe:
@@ -146,10 +160,11 @@ def abschiessen(x, y):
         stop_timer()
 
 def restart():
-    global board, schiffe
+    global board, schiffe, clicks
     board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
     schiffe = platziere_zufaellige_flotte()
     clicks = 0
+    start_timer()   
 
 
 def draw_board(surface):
