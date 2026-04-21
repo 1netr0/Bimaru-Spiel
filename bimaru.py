@@ -10,6 +10,7 @@ unbekannt = 0
 wasser = 1
 schiff = 2
 treffer = 3
+versenkt = 4
 feldgroesse = 50
 
 start = 0
@@ -151,6 +152,11 @@ def abschiessen(x, y):
     if feld.status == schiff:
         feld.status = treffer
         feld.schiff.treffer.add((reihe, spalte))
+
+        if feld.schiff.versenkt():
+            for fx, fy in feld.schiff.felder:
+                board[fx][fy].status = versenkt
+
     elif feld.status == treffer:
         feld.status = treffer
     else:
@@ -185,6 +191,8 @@ def draw_board(surface):
             elif status == schiff:
                 color = (255, 0, 0)
             elif status == treffer:
+                color = (255, 255, 0)
+            elif status == versenkt:
                 color = (0, 255, 0)
 
             pygame.draw.rect(DISPLAYSURF, color, (40 + j * feldgroesse, 40 + i*feldgroesse, feldgroesse, feldgroesse), 0)
@@ -198,13 +206,13 @@ def draw_board(surface):
     for j in range(spalten):
         anzahl = schiffe_spalten(j)
         text = font.render(str(anzahl), True, (0, 0, 0))
-        text_rect = text.get_rect(center=(40 + j * feldgroesse + feldgroesse / 2, 40 / 2))
+        text_rect = text.get_rect(center=(40 + j * feldgroesse + feldgroesse / 2, 20))
         DISPLAYSURF.blit(text, text_rect)
 
     for i in range(reihen):
         anzahl = schiffe_reihen(i)
         text = font.render(str(anzahl), True, (0, 0, 0))
-        text_rect = text.get_rect(center=(40 / 2, 40 + i * feldgroesse + feldgroesse / 2))
+        text_rect = text.get_rect(center=(20 , 40 + i * feldgroesse + feldgroesse / 2))
         DISPLAYSURF.blit(text, text_rect) 
 
 start_timer()
