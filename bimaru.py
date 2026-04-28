@@ -202,6 +202,38 @@ def schiffe_reihen(reihe):
     return sum(1 for spalte in range(spalten)
                if board[reihe][spalte].status == schiff and not board[reihe][spalte].hit)
 
+def draw_gewonnen_overlay(surface):
+    screen_w, screen_h = surface.get_size()
+ 
+
+    overlay = pygame.Surface((screen_w, screen_h), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 120))
+    surface.blit(overlay, (0, 0))
+ 
+
+    box_w, box_h = 360, 160
+    box_x = (screen_w - box_w) // 2
+    box_y = (screen_h - box_h) // 2
+ 
+
+    pygame.draw.rect(surface, (30, 30, 30), (box_x + 4, box_y + 4, box_w, box_h), border_radius=12)
+
+    pygame.draw.rect(surface, (255, 255, 255), (box_x, box_y, box_w, box_h), border_radius=12)
+
+    pygame.draw.rect(surface, (0, 180, 80), (box_x, box_y, box_w, box_h), 3, border_radius=12)
+ 
+    font_gross = pygame.font.SysFont(None, 42)
+    font_klein = pygame.font.SysFont(None, 30)
+ 
+    zeile1 = font_gross.render("Bimaru gelöst!", True, (0, 140, 60))
+    zeile2 = font_klein.render(f"Klicks: {clicks}   Zeit: {vergangene_zeit():.1f} s", True, (60, 60, 60))
+    zeile3 = font_klein.render("R drücken für ein neues Spiel", True, (120, 120, 120))
+ 
+    surface.blit(zeile1, zeile1.get_rect(center=(screen_w // 2, box_y + 45)))
+    surface.blit(zeile2, zeile2.get_rect(center=(screen_w // 2, box_y + 90)))
+    surface.blit(zeile3, zeile3.get_rect(center=(screen_w // 2, box_y + 125)))
+
+
 
 def draw_board(surface):
     for i in range(reihen):
@@ -278,4 +310,8 @@ while True:
     
     DISPLAYSURF.fill((255, 255, 255))
     draw_board(DISPLAYSURF)
+
+    if alles_versenkt():
+        draw_gewonnen_overlay(DISPLAYSURF)
+
     pygame.display.update()
