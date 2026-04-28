@@ -11,6 +11,8 @@ wasser = 1
 schiff = 2
 treffer = 3
 versenkt = 4
+markiert_wasser = 5
+markiert_schiff = 6
 feldgroesse = 50
 
 start = 0
@@ -24,6 +26,7 @@ class Feld():
         self.status = status
         self.schiff = None
         self.hit = False
+        self.markierung = None
 
 class Schiff():
     def __init__(self, laenge, felder):
@@ -165,6 +168,25 @@ def abschiessen(x, y):
     if alles_versenkt():
         stop_timer()
 
+def markieren(x, y):
+    spalte = (x - 40) // feldgroesse
+    reihe = (y - 40) // feldgroesse
+
+    if not in_bound(reihe, spalte):
+        return
+    
+    feld = board[reihe][spalte]
+
+    if feld.hit:
+        return
+    
+    if feld.markierung is None:
+        feld.markierung = markiert_wasser
+    elif feld.markierung == markiert_wasser:
+        feld.markierung = markiert_schiff
+    else:
+        feld.markierung = None
+
 def restart():
     global board, schiffe, clicks
     board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
@@ -173,30 +195,46 @@ def restart():
     start_timer()
 
 def schiffe_spalten(spalte):
-    return sum(1 for reihe in range(reihen) if board[reihe][spalte].status == schiff)
+    return sum(1 for reihe in range(reihen)
+               if board[reihe][spalte].status == schiff and not board[reihe][spalte].hit)
 
 def schiffe_reihen(reihe):
-    return sum(1 for spalte in range(spalten) if board[reihe][spalte].status == schiff)
+    return sum(1 for spalte in range(spalten)
+               if board[reihe][spalte].status == schiff and not board[reihe][spalte].hit)
 
 
 def draw_board(surface):
     for i in range(reihen):
         for j in range(spalten):
-            status = board[i][j].status
+            feld = board[i][j]
+            status = feld.status
             
             if status == unbekannt:
                 color = (200, 200, 200)
             elif status == wasser:
                 color = (0, 0, 255)
             elif status == schiff:
-                color = (255, 0, 0)
+                color = (200, 200, 200)
             elif status == treffer:
                 color = (255, 255, 0)
             elif status == versenkt:
                 color = (0, 255, 0)
+            else:
+                color = (200, 200, 200)
 
             pygame.draw.rect(DISPLAYSURF, color, (40 + j * feldgroesse, 40 + i*feldgroesse, feldgroesse, feldgroesse), 0)
             pygame.draw.rect(surface, (0, 0, 0), (40 + j * feldgroesse, 40 + i * feldgroesse, feldgroesse, feldgroesse), 1)
+
+
+            if not feld.hit:
+                cx = 40 + j * feldgroesse + feldgroesse // 2
+                cy = 40 + i * feldgroesse + feldgroesse // 2
+                if feld.markierung == markiert_wasser:
+                    sym = pygame.font.SysFont(None, 28).render("~", True, (0, 0, 150))
+                    DISPLAYSURF.blit(sym, sym.get_rect(center=(cx, cy)))
+                elif feld.markierung == markiert_schiff:
+                    sym = pygame.font.SysFont(None, 28).render("X", True, (60, 60, 60))
+                    DISPLAYSURF.blit(sym, sym.get_rect(center=(cx, cy)))
 
     text = font.render(f"clicks: {clicks}", True, (0, 0, 0))
     zeit = font.render(f"zeit: {vergangene_zeit()} s", True, (0, 0, 0))
@@ -226,6 +264,13 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = pygame.mouse.get_pos()
             abschiessen(x, y)
+        
+        ##if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_m:
+                    x, y = pygame.mouse.get_pos()
+                    markieren(x, y)
+
         
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
