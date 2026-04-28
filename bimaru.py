@@ -15,6 +15,20 @@ markiert_wasser = 5
 markiert_schiff = 6
 feldgroesse = 50
 
+
+schwierigkeitsstufen = [
+    ("Leicht",     6,  6,  [3, 2, 1, 1],                        70),
+    ("Mittel",     8,  8,  [3, 2, 2, 1, 1, 1],                  60),
+    ("Schwer",     10, 10, [4, 3, 3, 2, 2, 2, 1, 1, 1, 1],      50),
+    ("Experte",    12, 12, [5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1],   42),
+]
+
+reihen = 12
+spalten = 12
+flotten_laengen = [5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+feldgroesse = 42
+spiel_laeuft = False
+
 start = 0
 end = None
 
@@ -38,9 +52,8 @@ class Schiff():
         return len(self.treffer) == self.laenge
 
 
-reihen = 12
-spalten = 12
 board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
+schiffe = []
 
 def in_bound(x, y):
     return 0 <= x < reihen and 0 <= y < spalten
@@ -87,7 +100,6 @@ def platzieren_schiff(x, y, laenge, horizontal):
 
 def platziere_zufaellige_flotte():
     schiffe = []
-    flotten_laengen = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 
     for laenge in flotten_laengen:
         platziert = False
@@ -187,12 +199,23 @@ def markieren(x, y):
     else:
         feld.markierung = None
 
-def restart():
-    global board, schiffe, clicks
+def neue_runde(stufe_index):
+    global board, schiffe, clicks, reihen, spalten, flotten_laengen, feldgroesse, spiel_laeuft
+    _, r, s, fl, fg = schwierigkeitsstufen[stufe_index]
+    reihen = r
+    spalten = s
+    flotten_laengen = fl
+    feldgroesse = fg
+
     board = [[Feld() for _ in range(spalten)] for _ in range(reihen)]
     schiffe = platziere_zufaellige_flotte()
     clicks = 0
+    spiel_laeuft = True
     start_timer()
+
+def restart():
+    global spiel_laeuft
+    spiel_laeuft = False
 
 def schiffe_spalten(spalte):
     return sum(1 for reihe in range(reihen)
@@ -201,6 +224,61 @@ def schiffe_spalten(spalte):
 def schiffe_reihen(reihe):
     return sum(1 for spalte in range(spalten)
                if board[reihe][spalte].status == schiff and not board[reihe][spalte].hit)
+
+
+def draw_menu(surface):
+    sw, sh = surface.get_size()
+    surface.fill((15, 25, 50))
+
+    font_titel = pygame.font.SysFont(None, 72)
+    font_sub   = pygame.font.SysFont(None, 30)
+
+    titel = font_titel.render("BIMARU", True, (255, 255, 255))
+    sub   = font_sub.render("Schwierigkeitsstufe wählen", True, (120, 160, 220))
+    surface.blit(titel, titel.get_rect(center=(sw // 2, 110)))
+    surface.blit(sub,   sub.get_rect(center=(sw // 2, 170)))
+
+    btn_rects = []
+    btn_w, btn_h = 340, 72
+    spacing = 20
+    total_h = len(schwierigkeitsstufen) * (btn_h + spacing) - spacing
+    start_y = (sh - total_h) // 2 + 60
+
+    farben = [
+        ((50, 180, 90),  (30, 130, 60)),   
+        ((60, 140, 220), (30, 90, 170)),   
+        ((220, 150, 30), (160, 100, 10)),  
+        ((210, 50,  50), (150, 20, 20)),   
+    ]
+
+    beschreibungen = [
+        "6×6  ·  4 Schiffe",
+        "8×8  ·  6 Schiffe",
+        "10×10  ·  10 Schiffe",
+        "12×12  ·  11 Schiffe",
+    ]
+
+    for i, (name, *_) in enumerate(schwierigkeitsstufen):
+        bx = (sw - btn_w) // 2
+        by = start_y + i * (btn_h + spacing)
+        rect = pygame.Rect(bx, by, btn_w, btn_h)
+        btn_rects.append(rect)
+
+        farbe, _ = farben[i]
+
+        pygame.draw.rect(surface, farbe, rect, border_radius=12)
+
+        fn = pygame.font.SysFont(None, 38)
+        fd = pygame.font.SysFont(None, 24)
+        t_name = fn.render(name, True, (255, 255, 255))
+        t_desc = fd.render(beschreibungen[i], True, (220, 220, 220))
+        surface.blit(t_name, t_name.get_rect(center=(sw // 2, by + btn_h // 2 - 10)))
+        surface.blit(t_desc, t_desc.get_rect(center=(sw // 2, by + btn_h // 2 + 18)))
+
+    hint = font_sub.render("M = Markieren  ·  R = Hauptmenü", True, (70, 100, 150))
+    surface.blit(hint, hint.get_rect(center=(sw // 2, sh - 30)))
+
+    return btn_rects
 
 def draw_gewonnen_overlay(surface):
     screen_w, screen_h = surface.get_size()
@@ -227,7 +305,7 @@ def draw_gewonnen_overlay(surface):
  
     zeile1 = font_gross.render("Bimaru gelöst!", True, (0, 140, 60))
     zeile2 = font_klein.render(f"Klicks: {clicks}   Zeit: {vergangene_zeit():.1f} s", True, (60, 60, 60))
-    zeile3 = font_klein.render("R drücken für ein neues Spiel", True, (120, 120, 120))
+    zeile3 = font_klein.render("R drücken für das Hauptmenü", True, (120, 120, 120))
  
     surface.blit(zeile1, zeile1.get_rect(center=(screen_w // 2, box_y + 45)))
     surface.blit(zeile2, zeile2.get_rect(center=(screen_w // 2, box_y + 90)))
@@ -288,30 +366,40 @@ def draw_board(surface):
 start_timer()
 
 while True:
+    mx, my = pygame.mouse.get_pos()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            x, y = pygame.mouse.get_pos()
-            abschiessen(x, y)
-        
-        ##if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_m:
-                    x, y = pygame.mouse.get_pos()
-                    markieren(x, y)
 
-        
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
-                restart()
+        if not spiel_laeuft:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, rect in enumerate(menu_btn_rects if 'menu_btn_rects' in dir() else []):
+                    if rect.collidepoint(mx, my):
+                        neue_runde(i)
+
+
+        else:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not alles_versenkt():
+                    abschiessen(mx, my)
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    if not alles_versenkt():
+                        markieren(mx, my)
+                if event.key == pygame.K_r:
+                    restart()
     
     DISPLAYSURF.fill((255, 255, 255))
-    draw_board(DISPLAYSURF)
 
-    if alles_versenkt():
-        draw_gewonnen_overlay(DISPLAYSURF)
+    if not spiel_laeuft:
+        menu_btn_rects = draw_menu(DISPLAYSURF)
+    else:
+        draw_board(DISPLAYSURF)
+        if alles_versenkt():
+            draw_gewonnen_overlay(DISPLAYSURF)
 
     pygame.display.update()
